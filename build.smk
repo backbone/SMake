@@ -21,10 +21,10 @@ ifeq ($(mode),release)
 	LDFLAGS := -O1 $(LDFLAGS)
 endif
 
-CFLAGS += -Wall
-LDFLAGS += -Wall $(LIBRARIES)
+CFLAGS += -Wall $(INCLUDES)
+LDFLAGS += -Wall $(LIBS)
 
-all: change_make_options $(TARGET)
+all: change_make_options $(TARGETS)
 
 ifneq ($(mode),debug)
 ifneq ($(mode),profile)
@@ -56,9 +56,9 @@ ifneq ($(mode)|$(CFLAGS)|$(LDFLAGS), $(OLD_BUILD_MODE)|$(OLD_BUILD_CFLAGS)|$(OLD
 endif
 
 %.o :
-	$(CC) -c $(CFLAGS) $(INCLUDE) -o $@ $<
+	$(CC) -c $(CFLAGS) $(SRC) -o $@ $<
 
 clean:
-	$(RM) *.o *.out callgrind.out.* *.gcno $(TARGET)
+	$(RM) *.o *.out callgrind.out.* *.gcno $(TARGETS)
 
 .PHONY: all change_make_options clean

@@ -1,17 +1,16 @@
 #!/bin/bash
 # Usage examples:
 # smake.sh --help
-# smake.sh -t main
-# smake.sh -t server -t client -i ~/projects/include -i ~/projects/gnulib -lpthread -lexpat
-# smake.sh -t "program1 program2" -c gcc -x g++ -i "~/my_include /usr/local/include" -l "-llist -lhash"
 
 REP_CC=cc
 REP_CXX=c++
-REP_INCLUDE='$(HOME)/projects/include /usr/local/include'
-REP_LIBRARIES=
-REP_TARGET=target
+INCLUDES=
+REP_LIBS=
+REP_TARGETS=target
 
-# SMAKE_DIR=~/etc/smake
+SOURCES=
+PACKAGES=
+
 SMAKE_DIR=`realpath "$0"`
 SMAKE_DIR=${SMAKE_DIR%/*}
 HELP_FILE=$SMAKE_DIR/help.smk
@@ -23,43 +22,55 @@ RULES_FILE=$SMAKE_DIR/rules.smk
 DEBUG=1
 
 # Parameters processing
-TEMP=`getopt -o hc:x:i:l:t: --long help,cc:,cxx:,include:,libraries:,target: -- "$@"`
+TEMP=`getopt -o h:S:P:I:l:c:x:t: --long help:,sources:,package:,include:,libs:,cc:,cxx:,target: -- "$@"`
 eval set -- "$TEMP"
 
-include_changed=false
+sources_changed=false
+packages_changed=false
+includes_changed=false
 libraries_changed=false
-target_changed=false
+targets_changed=false
 
 while true ; do
 	case "$1" in
 		-h|--help) echo "Usage: smake.sh [key]... [goal]..." ;
 			echo "Keys:"
 			echo -e "-h, --help\t\t\tShow this help and exit."
-			echo -e "-c [CC], --cc [CC]\t\tUse CC as C compiler."
-			echo -e "-x [CXX], --cxx [CXX]\t\tUse CXX as C++ compiler." 
-			echo -e "-i [INC], --include [INC]\tSet INC as include path."
-			echo -e "-l [LIB], --libraries [LIB]\tSet LIB as libraries that must be linked with."
-			echo -e "-t [TGT], --target [TGT]\tSet TGT as target name."
+			echo -e "-S [SRC], --sources [SRC]\tSet SRC as path for search sources (ex: -S/home/user/src)."
+			echo -e "-P [PKG], --package [PKG]\tSet PKG as used package (ex: -Pglib-2.0)."
+			echo -e "-I [INC], --include [INC]\tSet INC as system include path (ex: -I/usr/include/glib-2.0)."
+			echo -e "-l [LIB], --libs [LIB]\tSet LIB as libraries that must be linked with (ex: -lglib-2.0)."
+			echo -e "-c [CC], --cc [CC]\t\tUse CC as C compiler (ex: -cgcc)."
+			echo -e "-x [CXX], --cxx [CXX]\t\tUse CXX as C++ compiler (ex: -xg++)." 
+			echo -e "-t [TGT], --target [TGT]\tSet TGT as target name (ex: -tmain)."
 			echo
-			echo -e "This program works on any Linux with GNU Baurne's shell"
+			echo -e "This program works on any GNU/Linux with GNU Baurne's shell"
 			echo -e "Report bugs to <mecareful@gmail.com>"
 			exit 0 ;
 			;;
+		-S|--source) [ $sources_changed == false ] && SOURCES="" && sources_changed=true; SOURCES="$SOURCES `echo $2 | sed "s~\~~\$\(HOME\)~g; s~^${HOME}~\$\(HOME\)~g ; s~/*$~~g"`" ; shift 2 ;;
+		-I|--include) [ $includes_changed == false ] && INCLUDES="" && includes_changed=true; INCLUDES="$INCLUDES -I`echo $2 | sed "s~\~\~~\$\(HOME\)~g; s~^${HOME}~\$\(HOME\)~g ; s~/*$~~g"`" ; shift 2 ;;
+		-P|--package) [ $packages_changed == false ] && PACKAGES="" && packages_changed=true; PACKAGES="$PACKAGES $2" ; shift 2 ;;
+		-l|--libs) [ $libraries_changed == false ] && REP_LIBS="" && libraries_changed=true;  REP_LIBS="$REP_LIBS -l$2" ; shift 2 ;;
 		-c|--cc) REP_CC=$2 ; echo "CC=$REP_CC" ; shift 2 ;;
 		-x|--cxx) REP_CXX=$2 ; echo "CXX=$REP_CXX" ; shift 2 ;;
-		-i|--include) [ $include_changed == false ] && REP_INCLUDE="" && include_changed=true;  REP_INCLUDE="$REP_INCLUDE `echo $2 | sed "s~\~~\$\(HOME\)~g; s~^${HOME}~\$\(HOME\)~g ; s~/*$~~g"`" ; shift 2 ;;
-		-l|--libraries) [ $libraries_changed == false ] && REP_LIBRARIES="" && libraries_changed=true;  REP_LIBRARIES="$REP_LIBRARIES $2" ; shift 2 ;;
-		-t|--target) [ $target_changed == false ] && REP_TARGET="" && target_changed=true; REP_TARGET="$REP_TARGET $2"; shift 2 ;;
+		-t|--target) [ $targets_changed == false ] && REP_TARGETS="" && targets_changed=true; REP_TARGETS="$REP_TARGETS $2"; shift 2 ;;
 		--) shift ; break ;;
 		*) echo "Internal error!" ; exit 1 ;;
 	esac
 done
 
 # ======= Show Environment =======
-REP_INCLUDE="`echo $REP_INCLUDE | sed 's~ ~\n~g' | sort -u | tr '\n' ' '`"
-echo "INCLUDE=$REP_INCLUDE"; 
-REP_LIBRARIES=`echo $REP_LIBRARIES | sed 's~\<\([A-Za-z]\)~-l\1~g'`
-echo "LIBRARIES=$REP_LIBRARIES"; 
+INCLUDES="$INCLUDES `pkg-config --cflags $PACKAGES`"
+REP_LIBS="$REP_LIBS `pkg-config --libs $PACKAGES`"
+SOURCES="`echo $SOURCES | sed 's~ ~\n~g' | sort -u | tr '\n' ' '`"
+PACKAGES="`echo $PACKAGES | sed 's~ ~\n~g' | sort -u | tr '\n' ' '`"
+INCLUDES="`echo $INCLUDES | sed 's~ ~\n~g' | sort -u | tr '\n' ' '`"
+REP_LIBS="`echo $REP_LIBS | sed 's~ ~\n~g' | sort -u | tr '\n' ' '`"
+echo "SOURCES=$SOURCES"; 
+echo "PACKAGES=$PACKAGES"; 
+echo "INCLUDES=$INCLUDES"; 
+echo "LIBS=$REP_LIBS"; 
 
 # ======= Help =======
 cat $HELP_FILE > Makefile
@@ -67,7 +78,7 @@ echo >> Makefile
 
 # ======= Test for target =======
 TARGET_SRC=
-for tgt in $REP_TARGET; do
+for tgt in $REP_TARGETS; do
 	tgt_src=
 	for ext in c cpp cxx cc; do
 		[ -f "$tgt.$ext" ] && tgt_src=$tgt.$ext && break
@@ -77,43 +88,43 @@ for tgt in $REP_TARGET; do
 done
 
 # ======= Environment =======
-tmp=$REP_TARGET
-REP_TARGET=
+tmp=$REP_TARGETS
+REP_TARGETS=
 i=0
 for tgt in $tmp; do
-	REP_TARGET="$REP_TARGET TARGET$i=$tgt"
+	REP_TARGETS="$REP_TARGETS TARGET$i=$tgt"
 	let i++
 done
-REP_TARGET=`echo $REP_TARGET | sed 's~ ~\\\n~g'`
-REP_TARGET="$REP_TARGET\nTARGET="
+REP_TARGETS=`echo $REP_TARGETS | sed 's~ ~\\\n~g'`
+REP_TARGETS="$REP_TARGETS\nTARGETS="
 i=0
 for tgt in $tmp; do
-	REP_TARGET="$REP_TARGET \$\(TARGET$i\)"
+	REP_TARGETS="$REP_TARGETS \$\(TARGET$i\)"
 	let i++
 done
 
 sed "s~REP_CC~$REP_CC~ ; s~REP_CXX~$REP_CXX~ ; \
-     s~REP_LIBRARIES~$REP_LIBRARIES~ ; s~REP_TARGET~$REP_TARGET~" $ENV_FILE >> Makefile
+     s~REP_LIBS~$REP_LIBS~ ; s~REP_TARGETS~$REP_TARGETS~" $ENV_FILE >> Makefile
 
 i=1
-for d in $REP_INCLUDE; do
-	echo "INCLUDE$i=$d" >> Makefile
+for d in $SOURCES; do
+	echo "SRC$i=$d" >> Makefile
 	let i++
 done
 
-echo -n "INCLUDE=" >> Makefile
+echo -n "SRC=" >> Makefile
 
 i=1
-for d in $REP_INCLUDE; do
+for d in $SOURCES; do
 	if [ $i != 1 ]; then
 		echo -n ' ' >> Makefile
 	fi
-	echo -n '-I$(INCLUDE'$i')' >> Makefile
+	echo -n '-I$(SRC'$i')' >> Makefile
 	let i++
 done
 echo >> Makefile
 
-echo >> Makefile
+echo 'INCLUDES='"$INCLUDES" >> Makefile
 
 # ======= Build =======
 cat $BUILD_FILE >> Makefile
@@ -122,7 +133,7 @@ echo >> Makefile
 
 # ======= Rules =======
 cat $RULES_FILE >> Makefile
-REP_INCLUDE=`echo $REP_INCLUDE | sed "s~-I~~g ; s~\\$(HOME)~${HOME}~g"`
+SOURCES=`echo $SOURCES | sed "s~-I~~g ; s~\\$(HOME)~${HOME}~g"`
 nfiles=0
 for tgt_src in $TARGET_SRC; do
 	flist[$nfiles]=$tgt_src
@@ -150,7 +161,7 @@ while [ $nfiles != $nparsed ]; do
 			[ $already_in_list == true ] && continue 
 
 			F=
-			for d in . $REP_INCLUDE; do
+			for d in . $SOURCES; do
 				if [ -f "$d/$f.$ext" ]; then
 					F="$d/$f.$ext"
 				elif [ -f "$d/`basename $f.$ext`" ]; then
@@ -268,8 +279,8 @@ for i in `seq 0 $((nfiles-1))`; do
 				echo -ne "\t" >> Makefile
 				fname=${fpath[$j]}
 				k=1
-				for d in $REP_INCLUDE ; do
-					_fname=`echo ${fpath[$j]} | sed "s~^$d~\$\(INCLUDE$k\)~"`
+				for d in $SOURCES ; do
+					_fname=`echo ${fpath[$j]} | sed "s~^$d~\$\(SRC$k\)~"`
 					[ "$_fname" != "${fpath[$j]}" ] && fname=$_fname
 					let k++
 				done
