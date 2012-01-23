@@ -73,7 +73,8 @@ echo "INCLUDES=$INCLUDES";
 echo "LIBS=$REP_LIBS"; 
 
 # ======= Help =======
-cat $HELP_FILE > Makefile
+echo "# smake.sh $@" > Makefile
+cat $HELP_FILE >> Makefile
 echo >> Makefile
 
 # ======= Test for target =======
