@@ -61,8 +61,8 @@ while true ; do
 done
 
 # ======= Show Environment =======
-INCLUDES="$INCLUDES `pkg-config --cflags $PACKAGES`"
-REP_LIBS="$REP_LIBS `pkg-config --libs $PACKAGES`"
+INCLUDES="$INCLUDES `pkg-config --cflags $PACKAGES 2>/dev/null`"
+REP_LIBS="$REP_LIBS `pkg-config --libs $PACKAGES 2>/dev/null`"
 SOURCES="`echo $SOURCES | sed 's~ ~\n~g' | sort -u | tr '\n' ' '`"
 PACKAGES="`echo $PACKAGES | sed 's~ ~\n~g' | sort -u | tr '\n' ' '`"
 INCLUDES="`echo $INCLUDES | sed 's~ ~\n~g' | sort -u | tr '\n' ' '`"
