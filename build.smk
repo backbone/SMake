@@ -5,15 +5,15 @@ ifeq ($(mode),)
 	mode = debug
 endif
 ifeq ($(mode),debug)
-	CFLAGS := -O0 -g -std=gnu99 -pedantic -Wextra -Wconversion $(CFLAGS)
+	CFLAGS := -O0 -g -DDEBUG -std=gnu99 -pedantic -Wextra -Wconversion $(CFLAGS)
 	LDFLAGS := $(LDFLAGS)
 endif
 ifeq ($(mode),profile)
-	CFLAGS := -O0 -g -p -ftest-coverage -Wcoverage-mismatch $(CFLAGS)
+	CFLAGS := -O0 -g -DDEBUG -p -ftest-coverage -Wcoverage-mismatch $(CFLAGS)
 	LDFLAGS := -g -p $(LDFLAGS)
 endif
 ifeq ($(mode),develop)
-	CFLAGS := -O2 -g $(CFLAGS)
+	CFLAGS := -O2 -g -DDEBUG $(CFLAGS)
 	LDFLAGS := -O1 $(LDFLAGS)
 endif
 ifeq ($(mode),release)
