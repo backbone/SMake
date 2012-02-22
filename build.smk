@@ -24,7 +24,9 @@ endif
 CFLAGS += -Wall $(INCLUDES)
 LDFLAGS += -Wall $(LIBS)
 
-all: change_make_options $(TARGETS)
+all:
+	@make change_make_options &>/dev/null
+	+make $(TARGETS)
 
 ifneq ($(mode),debug)
 ifneq ($(mode),profile)
@@ -49,7 +51,7 @@ OLD_BUILD_LDFLAGS=$(shell grep ^LDFLAGS make_options.out 2>/dev/null | sed 's~^L
 change_make_options:
 ifneq ($(mode)|$(CFLAGS)|$(LDFLAGS), $(OLD_BUILD_MODE)|$(OLD_BUILD_CFLAGS)|$(OLD_BUILD_LDFLAGS))
 	@echo CLEANING...
-	@make clean &>/dev/null
+	@make clean
 	@echo "MODE=$(mode)" > make_options.out
 	@echo "CFLAGS=$(CFLAGS)" >> make_options.out
 	@echo "LDFLAGS=$(LDFLAGS)" >> make_options.out
