@@ -22,6 +22,16 @@ RULES_FILE=$SMAKE_DIR/rules.smk
 DEBUG=1
 SMAKE_PARAMS=$@
 
+# If no options set then execute smake.sh with options saved in Makefile on last smake.sh run
+if [ "" == "$*" ]; then
+        run_cmd=`head -n1 Makefile 2>/dev/null | sed 's~.*: \(smake.sh\)~\1~' | sed "s~^smake.sh~$0~"`
+        if [ "" != "$run_cmd" ]; then
+                echo $run_cmd
+                $run_cmd
+                exit $?
+        fi
+fi
+
 # Parameters processing
 TEMP=`getopt -o hS:P:I:l:c:x:t: --long help,sources:,package:,include:,libs:,cc:,cxx:,target: -- "$@"`
 eval set -- "$TEMP"
