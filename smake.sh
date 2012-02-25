@@ -167,7 +167,11 @@ while [ $nfiles != $nparsed ]; do
 				if [ -f "$d/$f.$ext" ]; then
 					F="$d/$f.$ext"
 				elif [ -f "$d/`basename $f.$ext`" ]; then
-					F="$d/`basename $f.$ext`"
+                                        let is_tgt=0
+                                        for tgt_src in $TARGET_SRC; do
+                                                [ "`realpath $d/\`basename $f.$ext\``" == "`realpath $tgt_src`" ] && let is_tgt=1 && break
+                                        done
+				        [ 0 -eq $is_tgt ] && F="$d/`basename $f.$ext`"
 				fi
 				if [ "$F" != "" ]; then
 					flist[$nfiles]=$f.$ext
