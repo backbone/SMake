@@ -23,7 +23,7 @@ DEBUG=1
 SMAKE_PARAMS=$@
 
 # Parameters processing
-TEMP=`getopt -o h:S:P:I:l:c:x:t: --long help:,sources:,package:,include:,libs:,cc:,cxx:,target: -- "$@"`
+TEMP=`getopt -o h:S:P:I:l:c:x:t: --long help,sources:,package:,include:,libs:,cc:,cxx:,target: -- "$@"`
 eval set -- "$TEMP"
 
 sources_changed=false
