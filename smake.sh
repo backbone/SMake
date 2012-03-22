@@ -7,6 +7,9 @@ REP_CXX=c++
 INCLUDES=
 REP_LIBS=
 REP_TARGETS=target
+REP_CFLAGS=
+REP_CXXFLAGS=
+REP_LDFLAGS=
 
 SOURCES=
 PACKAGES=
@@ -33,7 +36,7 @@ if [ "" == "$*" ]; then
 fi
 
 # Parameters processing
-TEMP=`getopt -o hS:P:I:l:c:x:t: --long help,sources:,package:,include:,libs:,cc:,cxx:,target: -- "$@"`
+TEMP=`getopt -o hS:P:I:l:c:x:t: --long help,sources:,package:,include:,libs:,cc:,cxx:,target:,cflags:,cxxflags:,ldflags: -- "$@"`
 eval set -- "$TEMP"
 
 sources_changed=false
@@ -41,19 +44,25 @@ packages_changed=false
 includes_changed=false
 libraries_changed=false
 targets_changed=false
+cflags_changed=false
+cxxflags_changed=false
+ldflags_changed=false
 
 while true ; do
 	case "$1" in
 		-h|--help) echo "Usage: smake.sh [key]... [goal]..." ;
 			echo "Keys:"
-			echo -e "-h, --help\t\t\tShow this help and exit."
-			echo -e "-S [SRC], --sources [SRC]\tSet SRC as path for search sources (ex: -S/home/user/src)."
-			echo -e "-P [PKG], --package [PKG]\tSet PKG as used package (ex: -Pglib-2.0)."
-			echo -e "-I [INC], --include [INC]\tSet INC as system include path (ex: -I/usr/include/glib-2.0)."
-			echo -e "-l [LIB], --libs [LIB]\tSet LIB as libraries that must be linked with (ex: -lglib-2.0)."
-			echo -e "-c [CC], --cc [CC]\t\tUse CC as C compiler (ex: -cgcc)."
-			echo -e "-x [CXX], --cxx [CXX]\t\tUse CXX as C++ compiler (ex: -xg++)." 
-			echo -e "-t [TGT], --target [TGT]\tSet TGT as target name (ex: -tmain)."
+			echo -e "  -h, --help\t\t\tShow this help and exit."
+			echo -e "  -S, --sources=SRC\t\tSet SRC as path for search sources (ex: -S/home/user/src)."
+			echo -e "  -P, --package=PKG\t\tSet PKG as used package (ex: -Pglib-2.0)."
+			echo -e "  -I, --include=INC\t\tSet INC as system include path (ex: -I/usr/include/glib-2.0)."
+			echo -e "  -l, --libs=LIB\t\tSet LIB as libraries that must be linked with (ex: -lglib-2.0)."
+			echo -e "  -c, --cc=CC\t\t\tUse CC as C compiler (ex: -cgcc)."
+			echo -e "  -x, --cxx=CXX\t\t\tUse CXX as C++ compiler (ex: -xg++)." 
+			echo -e "  -t, --target=TGT\t\tSet TGT as target name (ex: -tmain)."
+			echo -e "      --cflags=CFLAGS\t\tPrepend CFLAGS to the C compiler flags (ex: --cflags=-fms-extensinos)."
+			echo -e "      --cxxflags=CXXFLAGS\tPrepend CXXFLAGS to the C++ compiler flags (ex: --cxxflags=-fms-extensinos)."
+			echo -e "      --ldflags=LDFLAGS\t\tPrepend LDFLAGS to the linker flags (ex: --cxxflags=-Wl,-O1)."
 			echo
 			echo -e "This program works on any GNU/Linux with GNU Baurne's shell"
 			echo -e "Report bugs to <mecareful@gmail.com>"
@@ -66,6 +75,9 @@ while true ; do
 		-c|--cc) REP_CC=$2 ; echo "CC=$REP_CC" ; shift 2 ;;
 		-x|--cxx) REP_CXX=$2 ; echo "CXX=$REP_CXX" ; shift 2 ;;
 		-t|--target) [ $targets_changed == false ] && REP_TARGETS="" && targets_changed=true; REP_TARGETS="$REP_TARGETS $2"; shift 2 ;;
+		--cflags) [ $cflags_changed == false ] && REP_CFLAGS="" && cflags_changed=true; REP_CFLAGS="$REP_CFLAGS $2"; shift 2 ;;
+		--cxxflags) [ $cxxflags_changed == false ] && REP_CXXFLAGS="" && cxxflags_changed=true; REP_CXXFLAGS="$REP_CXXFLAGS $2"; shift 2 ;;
+		--ldflags) [ $ldflags_changed == false ] && REP_LDFLAGS="" && ldflags_changed=true; REP_LDFLAGS="$REP_LDFLAGS $2"; shift 2 ;;
 		--) shift ; break ;;
 		*) echo "Internal error!" ; exit 1 ;;
 	esac
@@ -115,8 +127,10 @@ for tgt in $tmp; do
 	let i++
 done
 
-sed "s~REP_CC~$REP_CC~ ; s~REP_CXX~$REP_CXX~ ; \
-     s~REP_LIBS~$REP_LIBS~ ; s~REP_TARGETS~$REP_TARGETS~" $ENV_FILE >> Makefile
+sed "s~\<REP_CC\>~$REP_CC~ ; s~\<REP_CXX\>~$REP_CXX~ ; \
+     s~\<REP_LIBS\>~$REP_LIBS~ ; s~\<REP_TARGETS\>~$REP_TARGETS~ ; \
+     s~\<REP_CFLAGS\>~$REP_CFLAGS~ ; s~\<REP_CXXFLAGS\>~$REP_CXXFLAGS~ ; \
+     s~\<REP_LDFLAGS\>~$REP_LDFLAGS~" $ENV_FILE >> Makefile
 
 i=1
 for d in $SOURCES; do
