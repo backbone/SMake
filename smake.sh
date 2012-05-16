@@ -14,7 +14,7 @@ REP_LDFLAGS=
 SOURCES=
 PACKAGES=
 
-SMAKE_DIR=`realpath "$0"`
+SMAKE_DIR=`readlink -f "$0"`
 SMAKE_DIR=${SMAKE_DIR%/*}
 HELP_FILE=$SMAKE_DIR/help.smk
 ENV_FILE=$SMAKE_DIR/env.smk
@@ -194,7 +194,7 @@ while [ $nfiles != $nparsed ]; do
 				elif [ -f "$d/`basename $f.$ext`" ]; then
                                         let is_tgt=0
                                         for tgt_src in $TARGET_SRC; do
-                                                [ "`realpath $d/\`basename $f.$ext\``" == "`realpath $tgt_src`" ] && let is_tgt=1 && break
+                                                [ "`readlink -f $d/\`basename $f.$ext\``" == "`readlink -f $tgt_src`" ] && let is_tgt=1 && break
                                         done
 				        [ 0 -eq $is_tgt ] && F="$d/`basename $f.$ext`"
 				fi
