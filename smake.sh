@@ -103,6 +103,7 @@ echo >> Makefile
 # ======= Test for target =======
 TARGET_SRC=
 for tgt in $REP_TARGETS; do
+	tgt=${tgt%.exe}
 	tgt_src=
 	for ext in c cpp cxx cc; do
 		[ -f "$tgt.$ext" ] && tgt_src=$tgt.$ext && break
@@ -262,7 +263,7 @@ for tgt_src in $TARGET_SRC; do
 	echo >> Makefile
 	echo >> Makefile
 	echo '$(TARGET'$i'): $(target_objs'$i')' >> Makefile
-	echo -e '\t$(CC) $(LDFLAGS) -o $@ $(target_objs'$i')' >> Makefile
+	echo -e '\t$(CC) $(LDFLAGS) -o $@ $(target_objs'$i') $(LIBS)' >> Makefile
 	echo >> Makefile
 	
 	echo >> Makefile

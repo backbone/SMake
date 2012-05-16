@@ -22,7 +22,7 @@ ifeq ($(mode),release)
 endif
 
 CFLAGS += -Wall $(INCLUDES)
-LDFLAGS += -Wall $(LIBS)
+LDFLAGS += -Wall
 
 all:
 	@make change_make_options &>/dev/null
